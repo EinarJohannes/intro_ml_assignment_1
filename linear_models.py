@@ -1,15 +1,16 @@
 import numpy as np
 
 class LinearRegression():
-    def __init__(self, x_train, y_train, x_test, y_test,  lr=0.001, n_iterations=1000): # lr is learning rate, n_iterations is number of iterations in gradient descent? Could jus u
+    def __init__(self, x_train, y_train, x_test, y_test,  lr=0.001, n_iterations=1000): # lr is learning rate, n_iterations is number of iterations in gradient descent? Could just use convergence in interative difference in loss-function
+        
         self.weights = None
         self.bias = None
         
-        self.x_train = x_train
-        self.y_train = y_train 
+        self.x_train = np.array(x_train)
+        self.y_train = np.array(y_train) 
         
-        self.x_test = x_test
-        self.y_test = y_test
+        self.x_test = np.array(x_test) # Should not touch to begin with
+        self.y_test = np.array(y_test)
         
         self.beta_0 = 0
         self.beta_1 = 0
@@ -19,62 +20,93 @@ class LinearRegression():
         
         self.loss_history = []
         
-    # def get_parameters(self):
-        
-    def compute_mse(self, y, y_hat):
+
+    def estimate_y_pred(self, beta_0, beta_1):
         """
-        Computes mse based on x and 
+        Estimates y_pred from x with parameter values beta_0 and beta_1
+        
+        Input
+        -----
+        - beta_0
+            - float. constant term in linear model
+        - beta_1 
+            - float. growing factor in linear model 
+        Output
+        ------
+        - y_pred
+            - The estimated response from our input vector x and parameter values beta_0 and beta_1
+        """
+    
+        y_pred = beta_0 + beta_1 * self.x_train
+        
+        return y_pred 
+        
+    def compute_mse(self, beta_0, beta_1):
+        """
+        Computes mse based on y_pred and actual y
         
         Input 
         -----
-        - x
-            - np array or list of x-values (assumed 1-dimensional since this is linear regression case)
-        - y 
-            - np array or list of x-values (assumed 1-dimensional since this is linear regression case)
-            
+        - beta_0
+            - paramter in linear model used to estimate y_pred
+        - beta_1 
+            - parameter in linear model used to estimate y_pred
+        
         Output 
         ------
         - mse
             - scalar value of mse for given values of y and x
         """
-        y = np.array(y)
-        y_hat = np.array(y_hat)
         
-        n = len(y)
-        
-        difference = y-y_hat
+        y_pred = self.estimate_y_pred(beta_0, beta_1)
+        difference = self.y_train - y_pred
         difference_squared = difference**2
         
-        mse = difference_squared/n
+        sum = np.sum(difference_squared)
+        n = len(y_pred)
+        
+        mse = sum/n
         
         return mse 
     
-    def estimate_y_hat(self):
+    def compute_gradient(self, delta_beta_0 = 0.01, delta_beta_1 = 0.01):
         """
-        Estimates y_hat from x with parameter values beta_0 and beta_1
+        Computes gradient of mse where beta_0 and beta_1 are as defined
         
         Input
         -----
-        - x
-            - vector of input_valaues
+        - delta_beta_0
+            - used as the "infinitesimal" step to evaluate gradient for beta_0
+        - delta_beta_1
+            - used as the "infinitesimal" step to evaluate gradient for beta_1
+            
         Output
         ------
-        - y_hat
-            - The estimated response from our input vector x and parameter values beta_0 and beta_1
-        
+        - grad_beta_0
+            - beta_0 component of gradient
+        - grad_beta_1
+            - beta_1 component of gradient
         """
+        grad_beta_0 = 0
+        grad_beta_1 = 0
         
-        y_hat = self.beta_0 +self.beta_1 * self.x_train
+        grad_beta_0 = (self.compute_mse(self.beta_0 + delta_beta_0, self.beta_1) - self.compute_mse(self.beta_0, self.beta_1)) / delta_beta_0
+        grad_beta_1 = (self.compute_mse(self.beta_0, self.beta_1 + delta_beta_1) - self.compute_mse(self.beta_0, self.beta_1)) / delta_beta_1
         
-        return y_hat 
+        return grad_beta_0, grad_beta_1
+    
         
-    def step_g_d(self): # Not yet implemented
-        """
-        Performs one step of the gradient-descent-algorithm 
-        """
-        return "hello"
+    def step_g_d(self):
         
-    def fit(self, X, y):
+        # Don't really need these two under here, because they are calculated in self.compute_gradient()
+        # y_pred = self.estimate_y_pred(beta_0 = self.beta_0, beta_1 = self.beta_1)
+        # mse = self.compute_mse(self.beta_0, self.beta_1)
+        grad_beta_0, grad_beta_1 = self.compute_gradient()
+
+        self.beta_0 = self.beta_0 - self.lr * grad_beta_0
+        self.beta_1 = self.beta_1 - self.lr * grad_beta_1
+        
+    def fit(self):
         """
         Estimates parameters for the classifier
         
@@ -86,10 +118,15 @@ class LinearRegression():
         # ====================================
         # YOUR CODE GOES HERE
         
-        beta_0 = 0
-        beta_1 = 0
+        mse = self.compute_mse(beta_0 = self.beta_0, beta_1 = self.beta_1)
+        self.loss_history.append(mse)
         
-        return beta_0, beta_1
+        for _ in range(self.n_iterations):
+            self.step_g_d()
+            mse = self.compute_mse(beta_0 = self.beta_0, beta_1 = self.beta_1)
+        # Calculating estiamte for y_pred
+        
+        return self.beta_0, self.beta_1
         # ====================================
         raise NotImplementedError("LinearRegression.fit is not implemented yet.")
     

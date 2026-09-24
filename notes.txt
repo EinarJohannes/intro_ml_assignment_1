@@ -1,0 +1,36 @@
+Hva må gjøres nå:
+
+Vil implementere gradient descent for å tilpasse modellparametre
+    - beta_0
+    - beta_1 
+
+Bruker MSE som loss funksjon
+
+Hva skal algoritmen gjøre:
+ - Regn ut et estimat for y_pred ved å bruke self.x_train, self.beta_0 og self.beta_1
+ - Regn ut loss for denne predikerte y_pred  
+ - Regn ut gradient av loss for denne y_pred. 
+ - Oppdater beta_0 og beta_1 ut ifra gradient descent
+ - 
+
+grad_x = (loss(x + delta_x, y) - loss(x,y)) / delta_x
+grad_y = (loss(x, y + delta_y) - loss(x,y)) /delta_y
+
+Hvilke inputs tar funksjonene
+
+- estimate_y_pred(self, beta_0, beta_1)
+    - tar inn beta_0 og beta_1 
+    - estimerer y_pred basert på parametre 
+
+- compute_mse(self, beta_0, beta_1)
+    - regner ut mse basert på beta_0 og beta_1
+    - må først regne ut y_pred med estimate_y_pred deretter kan den regne ut mse
+    - bruker self.y_train til å regne ut mse 
+
+-compute_gradient(self, delta_beta_0, delta_beta_1)
+    - regner ut basert på attributter self.beta_0 og self.beta_1
+    - bruker definerte differanser, delta_beta_0, og delta_beta_1
+
+
+
+
