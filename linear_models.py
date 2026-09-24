@@ -18,10 +18,11 @@ class LinearRegression():
         self.lr = lr
         self.n_iterations = n_iterations
         
-        self.loss_history = []
+        self.training_loss_history = []
+        self.test_loss_history = []
         
 
-    def estimate_y_pred(self, beta_0, beta_1):
+    def estimate_y_pred(self, beta_0, beta_1, x):
         """
         Estimates y_pred from x with parameter values beta_0 and beta_1
         
@@ -37,13 +38,13 @@ class LinearRegression():
             - The estimated response from our input vector x and parameter values beta_0 and beta_1
         """
     
-        y_pred = beta_0 + beta_1 * self.x_train
+        y_pred = beta_0 + beta_1 * x
         
         return y_pred 
         
-    def compute_mse(self, beta_0, beta_1):
+    def compute_training_mse(self, beta_0, beta_1):
         """
-        Computes mse based on y_pred and actual y
+        Computes training mse based on y_pred and actual y
         
         Input 
         -----
@@ -58,7 +59,7 @@ class LinearRegression():
             - scalar value of mse for given values of y and x
         """
         
-        y_pred = self.estimate_y_pred(beta_0, beta_1)
+        y_pred = self.estimate_y_pred(beta_0, beta_1, self.x_train)
         difference = self.y_train - y_pred
         difference_squared = difference**2
         
@@ -68,7 +69,34 @@ class LinearRegression():
         mse = sum/n
         
         return mse 
-    
+
+    def compute_test_mse(self, beta_0, beta_1):
+        """
+        Compues test mse based on y_pred and actual y
+        
+        Input
+        -----
+        - beta_0
+            - parameter in linear model used to estimate y_pred from self.x_test
+        - beta_1
+            - parameter in linear model used to estimate y_pred from self.x_test
+            
+        Outpu
+        - mse
+            - mse evaluated on test dataset, which has not been used for training
+        """
+        
+        y_pred = self.estimate_y_pred(beta_0, beta_1, self.x_test)
+        difference = self.y_test - y_pred
+        difference_squared = difference**2
+        
+        sum = np.sum(difference_squared)
+        n = len(y_pred)
+        
+        mse = sum/n
+        
+        return mse
+        
     def compute_gradient(self, delta_beta_0 = 0.01, delta_beta_1 = 0.01):
         """
         Computes gradient of mse where beta_0 and beta_1 are as defined
@@ -90,17 +118,14 @@ class LinearRegression():
         grad_beta_0 = 0
         grad_beta_1 = 0
         
-        grad_beta_0 = (self.compute_mse(self.beta_0 + delta_beta_0, self.beta_1) - self.compute_mse(self.beta_0, self.beta_1)) / delta_beta_0
-        grad_beta_1 = (self.compute_mse(self.beta_0, self.beta_1 + delta_beta_1) - self.compute_mse(self.beta_0, self.beta_1)) / delta_beta_1
+        grad_beta_0 = (self.compute_training_mse(self.beta_0 + delta_beta_0, self.beta_1) - self.compute_training_mse(self.beta_0, self.beta_1)) / delta_beta_0
+        grad_beta_1 = (self.compute_training_mse(self.beta_0, self.beta_1 + delta_beta_1) - self.compute_training_mse(self.beta_0, self.beta_1)) / delta_beta_1
         
         return grad_beta_0, grad_beta_1
     
         
     def step_g_d(self):
         
-        # Don't really need these two under here, because they are calculated in self.compute_gradient()
-        # y_pred = self.estimate_y_pred(beta_0 = self.beta_0, beta_1 = self.beta_1)
-        # mse = self.compute_mse(self.beta_0, self.beta_1)
         grad_beta_0, grad_beta_1 = self.compute_gradient()
 
         self.beta_0 = self.beta_0 - self.lr * grad_beta_0
@@ -108,29 +133,31 @@ class LinearRegression():
         
     def fit(self):
         """
-        Estimates parameters for the classifier
-        
-        Args:
-            X (array<m,n>): a matrix of floats with
-                m rows (#samples) and n columns (#features)
-            y (array<m>): a vector of floats
+        Estimates parameters for the classifier. Estimates are stored as attributes for the class. 
+        Loss history can be found in self.loss_history
         """
         # ====================================
         # YOUR CODE GOES HERE
         
-        mse = self.compute_mse(beta_0 = self.beta_0, beta_1 = self.beta_1)
-        self.loss_history.append(mse)
+        training_mse = self.compute_training_mse(beta_0 = self.beta_0, beta_1 = self.beta_1)
+        self.training_loss_history.append(training_mse)
+        
+        test_mse = self.compute_test_mse(beta_0 = self.beta_0, beta_1 = self.beta_1)
+        self.test_loss_history.append(test_mse)
         
         for _ in range(self.n_iterations):
             self.step_g_d()
-            mse = self.compute_mse(beta_0 = self.beta_0, beta_1 = self.beta_1)
-        # Calculating estiamte for y_pred
-        
-        return self.beta_0, self.beta_1
+            training_mse = self.compute_training_mse(beta_0 = self.beta_0, beta_1 = self.beta_1)
+            self.training_loss_history.append(training_mse)
+            
+            test_mse = self.compute_test_mse(beta_0 = self.beta_0, beta_1 = self.beta_1)
+            self.test_loss_history.append(test_mse)
+            
+            
         # ====================================
-        raise NotImplementedError("LinearRegression.fit is not implemented yet.")
+        # raise NotImplementedError("LinearRegression.fit is not implemented yet.")
     
-    def predict(self, X):
+    def predict(self, x):
         """
         Generates predictions
         
@@ -146,8 +173,65 @@ class LinearRegression():
         # ====================================
         # YOUR CODE GOES HERE
         # ====================================
-        raise NotImplementedError("LinearRegression.predict is not implemented yet.")
+        
+        self.fit()
+        
+        # Erasing history in case this is done several times for different input values of x
+        self.training_loss_history = []
+        self.test_loss_history = []
+        
+        prediction = self.beta_0 + self.beta_1 * x
+        
+        return prediction
+        # raise NotImplementedError("LinearRegression.predict is not implemented yet.")
+        
+        
+    def plot_training_loss(self, from_index = 4):
+        """
+        Scatterplot of training loss history
+        """
+        import matplotlib.pyplot as plt
+        
+        plt.figure(figsize=(6, 4))
+        plt.scatter(range(from_index, len(self.training_loss_history)), self.training_loss_history[from_index:], label='Training Loss', color='blue')
+        plt.title('Training Loss History from index ' + str(from_index), fontsize=16)
+        plt.xlabel('Iteration', fontsize=14)
+        plt.ylabel('MSE', fontsize=14)
+        plt.grid(True)
+        plt.legend()
+        plt.show()
     
+    def plot_test_loss(self):
+        """
+        Scatterplot of test loss history
+        """
+        import matplotlib.pyplot as plt
+        
+        plt.figure(figsize=(6, 4))
+        plt.scatter(range(len(self.test_loss_history)), self.test_loss_history, label='Test Loss', color='red')
+        plt.title('Test Loss History', fontsize=16)
+        plt.xlabel('Iteration', fontsize=14)
+        plt.ylabel('MSE', fontsize=14)
+        plt.grid(True)
+        plt.legend()
+        plt.show()
+        
+    def plot_fitted_line_on_training_data(self):
+        """
+        Plots the fitted regression line together with the training data points
+        """
+        import matplotlib.pyplot as plt
+        
+        plt.figure(figsize=(6, 4))
+        plt.scatter(self.x_train, self.y_train, label='Data Points', color='blue')
+        plt.plot(self.x_train, self.predict(self.x_train), label='Fitted Line', color='red')
+        plt.title('Fitted Line vs Data Points', fontsize=16)
+        plt.xlabel('Network Activity', fontsize=14)
+        plt.ylabel('Energy', fontsize=14)
+        plt.grid(True)
+        plt.legend()
+        plt.show()
+
 class LogisticRegression():
     def __init__(self, lr=0.001, n_iterations=1000):
         self.weights = None
