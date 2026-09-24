@@ -39,8 +39,22 @@ Hvilke inputs tar funksjonene
 
 KLASSIFISERINGSPROBLEM
 
-Algoritme 
-- Vil regne ut likelihood som funksjon av beta_0, beta_1 og beta_2
+- step_g_d(self, x, y)
+    - hadde egentlig ikke tenkt å ta input-parametre, 
+    siden man kan bruke attributtene self.x_train og self.y_train. 
+    - FJERNET X OG Y
+
+- gradient(self, x, y, beta_0, beta_1, beta_2, delta = 0.01)
+    - trenger man egentlig x og y her?
+    - sender med x og y som argumenter i calculate_likelihood
+    - FJERNET X OG Y
+    - Kan fjerne beta_0, beta_1 og beta_2 og heller bruke self.beta_0 ...
+
+
+- calculate_likelihood(self, x, y, beta_0, beta_1, beta_2)
+    - FJERNET X OG Y
+    - Kun denne som trenger beta_0 og så videre?
+
 
 
 

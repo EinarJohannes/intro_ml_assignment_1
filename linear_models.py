@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 
 class LinearRegression():
     def __init__(self, x_train, y_train, x_test, y_test,  lr=0.001, n_iterations=1000): # lr is learning rate, n_iterations is number of iterations in gradient descent? Could just use convergence in interative difference in loss-function
@@ -250,27 +251,50 @@ class LogisticRegression():
         self.lr = lr
         self.n_iterations = n_iterations
         
-        self.loss_history = []
+        self.training_likelihood_history = []
+        
+    def calculate_prediction_accuracy(self): # Not implemented yet
+        
+        return 0
+    
+    def plot_training_loss_history(self):
+        import matplotlib.pyplot as plt
+        
+        plt.figure(figsize=(6, 4))
+        plt.scatter(range(len(self.training_likelihood_history)), self.training_likelihood_history, label='Training Likelihood', color='blue')
+        plt.title('Training Likelihood History', fontsize=16)
+        plt.xlabel('Iteration', fontsize=14)
+        plt.ylabel('Likelihood', fontsize=14)
+        plt.grid(True)
+        plt.legend()
+        plt.show()
     
     def calculate_bernoulli_density(self, p, k):
-        
-        result = p**k*(1-p)**(1-k)
+        """
+        Calculating probability that X = k, k in {0,1} given that probability for X = 1 is p.
+        Assuming X is bernoulli(p)
+        """
+        result = p**k * (1-p)**(1-k)
+        return result
         
     def calculate_linear_predictor(self, beta_0, beta_1, beta_2, x0, x1):
+        """
+        Calculating linear predictor eta_i
+        
+        Input
+        -----
+        - All parameters are scalars or np arrays
+        """
         
         return beta_0 + beta_1*x0 + beta_2*x1
     
     
-    def calculate_likelihood(self, x, y, beta_0, beta_1, beta_2):
+    def calculate_likelihood(self, beta_0, beta_1, beta_2):
         """
         Calculates probability of observing Y = y, given probability with expectation equal to sigmoid(eta), eta = X*beta
         
         Input
         -----
-        - x 
-            - n*2 matrix of x0 and x1 inputs 
-        - y
-            - n*1 vecotr with obsered values of zeros and ones 
         - beta_0
             - constant term in linear predictor 
         - beta_1 
@@ -286,13 +310,14 @@ class LogisticRegression():
         """
         
         likelihood = 1
-        x = np.to_numpy(x)
+        x = self.x_train
+        y = self.y_train
         
         for i in range(len(x)):
             eta = self.calculate_linear_predictor(
-                beta_0 = self.beta_0,
-                beta_1 = self.beta_1,
-                beta_2 = self.beta_0,
+                beta_0 = beta_0,
+                beta_1 = beta_1,
+                beta_2 = beta_2,
                 x0 = x[i][0],
                 x1 = x[i][1],
             )
@@ -302,65 +327,61 @@ class LogisticRegression():
         
         return likelihood
     
-    def gradient(self, x, y, beta_0, beta_1, beta_2, delta = 0.01): # not implemented yet
+    def gradient(self, delta = 0.01):
+        """
+        Calculates the gradient of the loss function where the loss function 
+        is assumed to be a function of the beta vector. Have also assumed delta to be 0.01
+        
+        Input
+        -----
+        - beta_0, beta_1, beta_2
+            - Should be the current state of the beta-vector
+        """
         gradient_beta_0 =(self.calculate_likelihood(
-            x = x,
-            y = y,
-            beta_0 = beta_0 + delta,
-            beta_1 = beta_1,
-            beta_2 = beta_2 
+            beta_0 = self.beta_0 + delta,
+            beta_1 = self.beta_1,
+            beta_2 = self.beta_2 
         ) - self.calculate_likelihood(
-            x = x,
-            y = y,
-            beta_0 = beta_0,
-            beta_1 = beta_1,
-            beta_2 = beta_2
+            beta_0 = self.beta_0,
+            beta_1 = self.beta_1,
+            beta_2 = self.beta_2
         ))/delta
         
         gradient_beta_1 = (self.calculate_likelihood(
-            x = x,
-            y = y,
-            beta_0 = beta_0,
-            beta_1 = beta_1 + delta,
-            beta_2 = beta_2
+            beta_0 = self.beta_0,
+            beta_1 = self.beta_1 + delta,
+            beta_2 = self.beta_2
         ) - self.calculate_likelihood(
-            x = x,
-            y = y,
-            beta_0 = beta_0,
-            beta_1 = beta_1,
-            beta_2 = beta_2
+            beta_0 = self.beta_0,
+            beta_1 = self.beta_1,
+            beta_2 = self.beta_2
         ))/delta
         
         gradient_beta_2 = (self.calculate_likelihood(
-            x = x,
-            y = y,
-            beta_0 = beta_0,
-            beta_1 = beta_1,
-            beta_2 = beta_2 + delta
+            beta_0 = self.beta_0,
+            beta_1 = self.beta_1,
+            beta_2 = self.beta_2 + delta
         ) - self.calculate_likelihood(
-            x = x,
-            y = y,
-            beta_0 = beta_0,
-            beta_1 = beta_1,
-            beta_2 = beta_2
+            beta_0 = self.beta_0,
+            beta_1 = self.beta_1,
+            beta_2 = self.beta_2
         ))/delta
 
         return gradient_beta_0, gradient_beta_1, gradient_beta_2
     
-    def step_g_d(self, x, y):
-        gradient_beta_0, gradient_beta_1, gradient_beta_2 = self.gradient(
-            x = x,
-            y = y,
-            beta_0 = self.beta_0,
-            beta_1 = self.beta_1,
-            beta_2 = self.beta_2
-        )
+    def step_g_d(self):
+        """
+        Takes no input-parameters. Performs one step of gradient-descent. 
+        Uses attributes of this instance of the class logisticregression.
+        """
         
-        self.beta_0 = self.beta_0 - self.lr * gradient_beta_0
-        self.beta_1 = self.beta_1 - self.lr * gradient_beta_1
-        self.beta_2 = self.beta_2 - self.lr * gradient_beta_2
+        gradient_beta_0, gradient_beta_1, gradient_beta_2 = self.gradient()
+        
+        self.beta_0 = self.beta_0 + self.lr * gradient_beta_0
+        self.beta_1 = self.beta_1 + self.lr * gradient_beta_1
+        self.beta_2 = self.beta_2 + self.lr * gradient_beta_2
 
-    def fit(self, x, y):
+    def fit(self):
         """
         Should fit parameters beta_0, beta_1, beta_2 to the model
         
@@ -371,19 +392,40 @@ class LogisticRegression():
         # YOUR CODE GOES HERE
         # ====================================
         
-        raise NotImplementedError("LogisticRegression.fit is not implemented yet.")
-    
-    def predict_proba(self, x):
-        # ====================================
-        # YOUR CODE GOES HERE
-        # ====================================
-        raise NotImplementedError("LogisticRegression.predict_proba is not implemented yet.")
+        #Resetting loss history in case it has been used before. 
+        self.training_likelihood_history = []
         
-    def predict(self, x):
+        self.training_likelihood_history.append(self.calculate_likelihood(
+            beta_0 = self.beta_0,
+            beta_1 = self.beta_1,
+            beta_2 = self.beta_2
+        ))
+        
+        for _ in range(self.n_iterations):
+            self.step_g_d()
+            mse = self.calculate_likelihood(
+                beta_0 = self.beta_0,
+                beta_1 = self.beta_1,
+                beta_2 = self.beta_2
+            )
+            self.training_likelihood_history.append(mse)
+                
+    def predict_proba(self):
         # ====================================
         # YOUR CODE GOES HERE
         # ====================================
-        raise NotImplementedError("LogisticRegression.predict is not implemented yet.")
+        
+        beta_vector = np.array([self.beta_1, self.beta_2])
+        
+        sigmoid_vector =self.sigmoid(self.beta_0 + self.x_test @ beta_vector)
+        return sigmoid_vector
+    
+    
+    def predict(self, x):
+        probabilities = self.predict_proba()
+        predictions_vector = probabilities > 0.5
+        
+        return predictions_vector
         
     def sigmoid(self, z):
         """
@@ -398,6 +440,5 @@ class LogisticRegression():
         - sigmoid(z) = logit^{-1}(z)
         """
         
-        result = 1/(1 + np.e^(-z))
+        result = 1/(1 + np.exp(-z))
         return result 
-        raise NotImplementedError("LogisticRegression.sigmoid is not implemented yet.")
