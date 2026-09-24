@@ -18,18 +18,30 @@ grad_y = (loss(x, y + delta_y) - loss(x,y)) /delta_y
 
 Hvilke inputs tar funksjonene
 
-- estimate_y_pred(self, beta_0, beta_1)
+- estimate_y_pred(self, beta_0, beta_1, x)
     - tar inn beta_0 og beta_1 
-    - estimerer y_pred basert på parametre 
+    - estimerer y_pred basert på parametre og input x
 
-- compute_mse(self, beta_0, beta_1)
+- compute_training_mse(self, beta_0, beta_1)
     - regner ut mse basert på beta_0 og beta_1
     - må først regne ut y_pred med estimate_y_pred deretter kan den regne ut mse
     - bruker self.y_train til å regne ut mse 
+- compute_test_mse(self, beta_0, beta_1)
+    - regner ut test_mse basert på beta_0 og beta_1
+    - bruker self.y_test til å regne ut mse
 
 -compute_gradient(self, delta_beta_0, delta_beta_1)
     - regner ut basert på attributter self.beta_0 og self.beta_1
     - bruker definerte differanser, delta_beta_0, og delta_beta_1
+
+
+###########################################################################################
+
+KLASSIFISERINGSPROBLEM
+
+Algoritme 
+- Vil regne ut likelihood som funksjon av beta_0, beta_1 og beta_2
+
 
 
 
