@@ -209,7 +209,7 @@ class LinearRegression():
         import matplotlib.pyplot as plt
         
         plt.figure(figsize=(6, 4))
-        plt.scatter(range(len(self.test_loss_history)), self.test_loss_history, label='Test Loss', color='red')
+        plt.scatter(range(len(self.test_loss_history) - 5), self.test_loss_history[5:], label='Test Loss', color='red')
         plt.title('Test Loss History', fontsize=16)
         plt.xlabel('Iteration', fontsize=14)
         plt.ylabel('MSE', fontsize=14)
@@ -267,7 +267,7 @@ class LogisticRegression():
         
         plt.figure(figsize=(6, 4))
         plt.scatter(range(len(self.training_likelihood_history)), self.training_likelihood_history, label='Training Likelihood', color='blue')
-        plt.title('Training Likelihood History', fontsize=16)
+        plt.title('Training Log Likelihood History', fontsize=16)
         plt.xlabel('Iteration', fontsize=14)
         plt.ylabel('Likelihood', fontsize=14)
         plt.grid(True)
@@ -450,9 +450,7 @@ class LogisticRegression():
         exp_z = np.exp(z[~positive])
         result[~positive] = exp_z / (1 + exp_z)
         return result
-    
-    
-    
+      
 class LogisticRegression2():
     def __init__(self, x_train, y_train, x_test, y_test, lr=0.001, n_iterations=1000):
         self.weights = None
@@ -488,7 +486,7 @@ class LogisticRegression2():
         
         plt.figure(figsize=(6, 4))
         plt.scatter(range(len(self.training_likelihood_history)), self.training_likelihood_history, label='Training Likelihood', color='blue')
-        plt.title('Training Likelihood History', fontsize=16)
+        plt.title('Training Log Likelihood History', fontsize=16)
         plt.xlabel('Iteration', fontsize=14)
         plt.ylabel('Likelihood', fontsize=14)
         plt.grid(True)
